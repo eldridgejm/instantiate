@@ -53,7 +53,7 @@ def infer_next_project_number(path, k=2):
     return format(number, "0" + str(k))
 
 
-def render(src, dst, contexts):
+def _render(src, dst, contexts):
     """Renders the template at src, writes result to dst."""
     with src.open("r") as fileobj:
         template = jinja2.Template(fileobj.read())
@@ -62,9 +62,21 @@ def render(src, dst, contexts):
 
 
 def replace(directory, contexts):
+    """Make Jinja2 substitutions in all files under a directory.
+
+    Parameters
+    ----------
+    directory : pathlib.Path
+        The directory whose files will be rendered.
+    contexts : dictionary of dictionaries
+        A dict of dicts containing the values available in substitutions. The
+        outer dictionary keys are the outer context, and their inner keys
+        are the names of the values.
+
+    """
     for path in directory.glob("**/*"):
         if path.is_file():
-            render(path, path, contexts)
+            _render(path, path, contexts)
 
 
 def make_project(cwd, template_dir, project_name, *, contexts=None, numbering=None):

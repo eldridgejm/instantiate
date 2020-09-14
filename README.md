@@ -19,7 +19,7 @@ This will:
 - perform substitutions in every copied file using Jinja2 and variables read
   from the `my_variables.yaml` file
 
-For instance, if the `vars.yaml` file looks like this:
+For instance, if the `my_variables.yaml` file looks like this:
 
 ```yaml
 name: Justin
@@ -28,7 +28,8 @@ year: 2020
 ```
 
 Then the variables are accessible as `{{ my_variables.name }}`, `{{
-my_variables.course }}`, and `{{ my_variables.year }}`, respectively.
+my_variables.course }}`, and `{{ my_variables.year }}`, respectively. In general,
+if your context file is named `foo.yaml`, your variables are accessible as `{{ foo.<whatever> }}`.
 
 Several variables are generated automatically. They are:
 

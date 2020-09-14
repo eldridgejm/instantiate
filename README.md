@@ -12,8 +12,8 @@ Usage
 
 This will:
 
-- infer the current project number from the projects currently in the directory
-- create a new directory named `##-project_name`, where `##` is the current
+- infer the current project number from the projects in the current directory
+- create a new directory named `##-project_name`, where `##` is the newest
   project number zero-padded to two places. 
 - copy the entire contents of the `path_to_template` directory into the project
 - perform substitutions in every copied file using Jinja2 and variables read

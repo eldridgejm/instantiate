@@ -2,7 +2,9 @@
 # ===========
 # A simple script for instantiating projects from a template.
 
+from collections import deque
 import argparse
+import fnmatch
 import pathlib
 import shutil
 import typing
@@ -53,16 +55,20 @@ def infer_next_project_number(path, k=2):
     return format(number, "0" + str(k))
 
 
-def _render(src, dst, contexts):
+def render(src, dst, contexts):
     """Renders the template at src, writes result to dst."""
     with src.open("r") as fileobj:
-        template = jinja2.Template(fileobj.read())
+        # raise on undefined variables
+        template = jinja2.Template(fileobj.read(), undefined=jinja2.StrictUndefined)
     with dst.open("w") as fileobj:
-        fileobj.write(template.render(**contexts))
+        try:
+            fileobj.write(template.render(**contexts))
+        except jinja2.exceptions.UndefinedError as exc:
+            raise RuntimeError(f'Problem replacing in {src}: {exc}')
 
 
-def replace(directory, contexts):
-    """Make Jinja2 substitutions in all files under a directory.
+def replace(directory, contexts, no_replace=None, render=render):
+    """Make Jinja2 substitutions in-place in all files under a directory.
 
     Parameters
     ----------
@@ -72,14 +78,43 @@ def replace(directory, contexts):
         A dict of dicts containing the values available in substitutions. The
         outer dictionary keys are the outer context, and their inner keys
         are the names of the values.
+    no_replace : Collection[str]
+        A collection of fnmatch-style patterns of filenames on which
+        replacement should not be performed. If None, replacement will be 
+        performed on all files.
 
     """
-    for path in directory.glob("**/*"):
-        if path.is_file():
-            _render(path, path, contexts)
+    if no_replace is None:
+        no_replace = []
+
+    def _should_be_skipped(path):
+        return any(fnmatch.fnmatch(path.name, pattern) for pattern in no_replace)
+
+    # we'll do a BFS to find files and explore only directories that should
+    # be explored; we could use os.walk, but this is slightly easier
+    queue = deque([directory])
+    while queue:
+        current_directory = queue.popleft()
+
+        for subpath in current_directory.iterdir():
+            if _should_be_skipped(subpath):
+                continue
+            if subpath.is_file():
+                render(src=subpath, dst=subpath, contexts=contexts)
+            elif subpath.is_dir():
+                queue.append(subpath)
 
 
-def make_project(cwd, template_dir, project_name, *, contexts=None, numbering=None):
+def make_project(
+    cwd,
+    template_dir,
+    project_name,
+    *,
+    contexts=None,
+    numbering=None,
+    no_replace=None,
+    render=render,
+):
     """Create a project from the given template.
 
     Parameters
@@ -97,6 +132,10 @@ def make_project(cwd, template_dir, project_name, *, contexts=None, numbering=No
         Whether the project should be numbered and with how many digits.
         If None, no numbering is performed. Otherwise, this will be the number
         of digits in the project number.
+    no_replace : Collection[str]
+        A collection of fnmatch-style patterns of filenames on which
+        replacement should not be performed. If None, replacement will be 
+        performed on all files.
 
     Raises
     ------
@@ -122,7 +161,7 @@ def make_project(cwd, template_dir, project_name, *, contexts=None, numbering=No
 
     # replace
     contexts["project"] = {"number": project_number, "name": project_name}
-    replace(dst_dir, contexts)
+    replace(dst_dir, contexts, no_replace=no_replace, render=render)
 
 
 def cli(argv=None, cwd=None):
@@ -145,6 +184,7 @@ def cli(argv=None, cwd=None):
     parser.add_argument("project_name")
     parser.add_argument("--numbering", type=int)
     parser.add_argument("--context", type=pathlib.Path)
+    parser.add_argument("--no-replace", nargs="+")
     args = parser.parse_args(argv)
 
     contexts = {}
@@ -152,13 +192,20 @@ def cli(argv=None, cwd=None):
         with (cwd / args.context).open() as fileobj:
             contexts[args.context.stem] = yaml.load(fileobj, Loader=yaml.Loader)
 
-    make_project(
-        cwd,
-        args.template_dir,
-        args.project_name,
-        numbering=args.numbering,
-        contexts=contexts,
-    )
+    try:
+        make_project(
+            cwd,
+            args.template_dir,
+            args.project_name,
+            numbering=args.numbering,
+            contexts=contexts,
+            no_replace=args.no_replace,
+        )
+    except FileExistsError:
+        print('Destination already exists. Not overwriting!')
+    except Exception:
+        shutil.rmtree(cwd / args.project_name)
+        raise
 
 
 if __name__ == "__main__":

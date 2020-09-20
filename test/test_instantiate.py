@@ -1,6 +1,7 @@
 import pathlib
 import os
 import yaml
+from unittest.mock import Mock
 
 from pytest import fixture, raises
 
@@ -24,7 +25,7 @@ def test_copy(tempdir):
     assert (tempdir / "foo" / "one").exists()
     assert (tempdir / "foo" / "two").exists()
     assert (tempdir / "foo" / "subdir").is_dir()
-    assert (tempdir / "foo" / "subdir" / "a").exists()
+    assert (tempdir / "foo" / "subdir" / "a.pdf").exists()
 
 
 def test_replacements(tempdir):
@@ -36,6 +37,20 @@ def test_replacements(tempdir):
 
     # then
     assert contents.strip() == "foo and None"
+
+
+def test_replacements_ignore_patterns(tempdir):
+    # when
+    mock_render = Mock()
+    instantiate.make_project(
+        tempdir, TEMPLATE_1_PATH, "foo", no_replace=["bin", "*.pdf"], render=mock_render
+    )
+
+    # then
+    sources = [x[1]["src"] for x in mock_render.call_args_list]
+    assert not (tempdir / "foo" / "bin" / "bar") in sources
+    assert not (tempdir / "foo" / "subdir" / "a.pdf") in sources
+    assert (tempdir / "foo" / "subdir" / "c.tex") in sources
 
 
 def test_additional_context(tempdir):

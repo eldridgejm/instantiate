@@ -110,7 +110,7 @@ def make_project(
     template_dir,
     project_name,
     *,
-    contexts=None,
+    context=None,
     numbering=None,
     no_replace=None,
     render=render,
@@ -125,9 +125,8 @@ def make_project(
         Path to the template directory. Must obey the structure described below.
     project_name : str
         The name of the new project.
-    contexts : dict
-        A dictionary of dictionaries whose values will be available to the
-        templates.
+    context : dict
+        A dictionary whose values will be available to the templates.
     numbering : int
         Whether the project should be numbered and with how many digits.
         If None, no numbering is performed. Otherwise, this will be the number
@@ -146,8 +145,10 @@ def make_project(
     if not template_dir.exists():
         raise ValueError(f'Template "{template_dir}" does not exist.')
 
-    if contexts is None:
+    if context is None:
         contexts = {}
+    else:
+        contexts = {'context': context}
 
     project_number = infer_next_project_number(cwd, numbering)
 
@@ -187,10 +188,10 @@ def cli(argv=None, cwd=None):
     parser.add_argument("--no-replace", nargs="+")
     args = parser.parse_args(argv)
 
-    contexts = {}
+    context = {}
     if args.context is not None:
         with (cwd / args.context).open() as fileobj:
-            contexts[args.context.stem] = yaml.load(fileobj, Loader=yaml.Loader)
+            context[args.context.stem] = yaml.load(fileobj, Loader=yaml.Loader)
 
     try:
         make_project(
@@ -198,13 +199,14 @@ def cli(argv=None, cwd=None):
             args.template_dir,
             args.project_name,
             numbering=args.numbering,
-            contexts=contexts,
+            context=context,
             no_replace=args.no_replace,
         )
     except FileExistsError:
         print('Destination already exists. Not overwriting!')
     except Exception:
-        shutil.rmtree(cwd / args.project_name)
+        if (cwd / args.project_name).exists():
+            shutil.rmtree(cwd / args.project_name)
         raise
 
 

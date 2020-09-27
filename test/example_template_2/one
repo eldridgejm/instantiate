@@ -1,1 +1,1 @@
-{{ course.instructor }} is the instructor of {{ course.name }}. {{ course.presentations[0] }}
+{{ context.course.instructor }} is the instructor of {{ context.course.name }}. {{ context.course.presentations[0] }}

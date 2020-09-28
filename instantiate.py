@@ -5,6 +5,7 @@
 from collections import deque
 import argparse
 import fnmatch
+import os
 import pathlib
 import shutil
 import typing
@@ -188,6 +189,8 @@ def cli(argv=None, cwd=None):
     """
     if cwd is None:
         cwd = pathlib.Path.cwd()
+    else:
+        os.chdir(cwd)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("template_dir", type=pathlib.Path)
@@ -199,7 +202,7 @@ def cli(argv=None, cwd=None):
 
     context = {}
     if args.context is not None:
-        with (cwd / args.context).open() as fileobj:
+        with args.context.open() as fileobj:
             context[args.context.stem] = yaml.load(fileobj, Loader=yaml.Loader)
 
     try:

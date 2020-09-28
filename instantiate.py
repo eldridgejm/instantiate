@@ -55,26 +55,26 @@ def infer_next_project_number(path, k=2):
     return format(number, "0" + str(k))
 
 
-def render(src, dst, available):
+def render(src, dst, variables):
     """Renders the template at src, writes result to dst."""
     with src.open("r") as fileobj:
         # raise on undefined variables
         template = jinja2.Template(fileobj.read(), undefined=jinja2.StrictUndefined)
     with dst.open("w") as fileobj:
         try:
-            fileobj.write(template.render(**available))
+            fileobj.write(template.render(**variables))
         except jinja2.exceptions.UndefinedError as exc:
             raise RuntimeError(f'Problem replacing in {src}: {exc}')
 
 
-def replace(directory, available, no_replace=None, render=render):
+def replace(directory, variables, no_replace=None, render=render):
     """Make Jinja2 substitutions in-place in all files under a directory.
 
     Parameters
     ----------
     directory : pathlib.Path
         The directory whose files will be rendered.
-    available : dictionary of dictionaries
+    variables : dictionary of dictionaries
         A dict of dicts containing the values available in substitutions. The
         outer dictionary keys are the outer context, and their inner keys
         are the names of the values.
@@ -100,7 +100,7 @@ def replace(directory, available, no_replace=None, render=render):
             if _should_be_skipped(subpath):
                 continue
             if subpath.is_file():
-                render(src=subpath, dst=subpath, available=available)
+                render(src=subpath, dst=subpath, variables=variables)
             elif subpath.is_dir():
                 queue.append(subpath)
 
@@ -126,7 +126,7 @@ def make_project(
     project_name : str
         The name of the new project.
     context : dict
-        A dictionary whose values will be available to the templates.
+        A dictionary whose values will be variables to the templates.
     numbering : int
         Whether the project should be numbered and with how many digits.
         If None, no numbering is performed. Otherwise, this will be the number
@@ -140,6 +140,14 @@ def make_project(
     ------
     ValueError
         If the template does not exist.
+
+    Notes
+    -----
+    The template is passed a dictionary of variables that can be used during
+    rendering. The ``context`` dictionary provided to this function is
+    available under the ``context`` key. In addition, the ``project`` key
+    points to a dictionary containing ``number`` and ``name``, which hold the
+    project's number and name respectively.
 
     """
     if not template_dir.exists():
@@ -159,14 +167,14 @@ def make_project(
     shutil.copytree(template_dir, dst_dir)
 
     # replace
-    available = {
+    variables = {
             'context': context,
             'project': {
                 'number': project_number,
                 'name': project_name
             }
         }
-    replace(dst_dir, available, no_replace=no_replace, render=render)
+    replace(dst_dir, variables, no_replace=no_replace, render=render)
 
 
 def cli(argv=None, cwd=None):

@@ -27,9 +27,10 @@ course: DSC 40B
 year: 2020
 ```
 
-Then the variables are accessible as `{{ my_variables.name }}`, `{{
-my_variables.course }}`, and `{{ my_variables.year }}`, respectively. In general,
-if your context file is named `foo.yaml`, your variables are accessible as `{{ foo.<whatever> }}`.
+Then the variables are accessible as `{{ context.my_variables.name }}`, `{{
+context.my_variables.course }}`, and `{{ context.my_variables.year }}`,
+respectively. In general, if your context file is named `foo.yaml`, your
+variables are accessible as `{{ context.foo.<whatever> }}`.
 
 Several variables are generated automatically. They are:
 

@@ -64,7 +64,7 @@ def render(src, dst, variables):
         try:
             fileobj.write(template.render(**variables))
         except jinja2.exceptions.UndefinedError as exc:
-            raise RuntimeError(f'Problem replacing in {src}: {exc}')
+            raise RuntimeError(f"Problem replacing in {src}: {exc}")
 
 
 def replace(directory, variables, no_replace=None, render=render):
@@ -168,12 +168,9 @@ def make_project(
 
     # replace
     variables = {
-            'context': context,
-            'project': {
-                'number': project_number,
-                'name': project_name
-            }
-        }
+        "context": context,
+        "project": {"number": project_number, "name": project_name},
+    }
     replace(dst_dir, variables, no_replace=no_replace, render=render)
 
 
@@ -215,7 +212,7 @@ def cli(argv=None, cwd=None):
             no_replace=args.no_replace,
         )
     except FileExistsError:
-        print('Destination already exists. Not overwriting!')
+        print("Destination already exists. Not overwriting!")
     except Exception:
         if (cwd / args.project_name).exists():
             shutil.rmtree(cwd / args.project_name)

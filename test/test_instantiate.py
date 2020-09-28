@@ -71,7 +71,9 @@ def test_additional_context(tempdir):
     with (tempdir / "bar" / "one").open() as fileobj:
         contents = fileobj.read()
 
-    assert contents.strip() == "Justin Eldridge is the instructor of DSC 40B. \nlectures"
+    assert (
+        contents.strip() == "Justin Eldridge is the instructor of DSC 40B. \nlectures"
+    )
 
 
 def test_numbering(tempdir):

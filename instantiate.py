@@ -55,26 +55,26 @@ def infer_next_project_number(path, k=2):
     return format(number, "0" + str(k))
 
 
-def render(src, dst, contexts):
+def render(src, dst, available):
     """Renders the template at src, writes result to dst."""
     with src.open("r") as fileobj:
         # raise on undefined variables
         template = jinja2.Template(fileobj.read(), undefined=jinja2.StrictUndefined)
     with dst.open("w") as fileobj:
         try:
-            fileobj.write(template.render(**contexts))
+            fileobj.write(template.render(**available))
         except jinja2.exceptions.UndefinedError as exc:
             raise RuntimeError(f'Problem replacing in {src}: {exc}')
 
 
-def replace(directory, contexts, no_replace=None, render=render):
+def replace(directory, available, no_replace=None, render=render):
     """Make Jinja2 substitutions in-place in all files under a directory.
 
     Parameters
     ----------
     directory : pathlib.Path
         The directory whose files will be rendered.
-    contexts : dictionary of dictionaries
+    available : dictionary of dictionaries
         A dict of dicts containing the values available in substitutions. The
         outer dictionary keys are the outer context, and their inner keys
         are the names of the values.
@@ -100,7 +100,7 @@ def replace(directory, contexts, no_replace=None, render=render):
             if _should_be_skipped(subpath):
                 continue
             if subpath.is_file():
-                render(src=subpath, dst=subpath, contexts=contexts)
+                render(src=subpath, dst=subpath, available=available)
             elif subpath.is_dir():
                 queue.append(subpath)
 
@@ -146,9 +146,7 @@ def make_project(
         raise ValueError(f'Template "{template_dir}" does not exist.')
 
     if context is None:
-        contexts = {}
-    else:
-        contexts = {'context': context}
+        context = {}
 
     project_number = infer_next_project_number(cwd, numbering)
 
@@ -161,8 +159,14 @@ def make_project(
     shutil.copytree(template_dir, dst_dir)
 
     # replace
-    contexts["project"] = {"number": project_number, "name": project_name}
-    replace(dst_dir, contexts, no_replace=no_replace, render=render)
+    available = {
+            'context': context,
+            'project': {
+                'number': project_number,
+                'name': project_name
+            }
+        }
+    replace(dst_dir, available, no_replace=no_replace, render=render)
 
 
 def cli(argv=None, cwd=None):

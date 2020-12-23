@@ -11,7 +11,7 @@
         propagatedBuildInputs = with python37Packages; [ jinja2 pyyaml ];
         nativeBuildInputs = with python37Packages;[ black pytest ipython ];
       };
-    defaultPackage.x86_64-darwin = instantiate;
+    defaultPackage.x86_64-darwin = self.instantiate;
   };
 
 }

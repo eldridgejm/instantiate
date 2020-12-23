@@ -1,7 +1,7 @@
 {
   description = "Instantiate directories from templates.";
 
-  inputs.nixpkgs.url = github:NixOS/nixpkgs/nixos-20.09;
+  inputs.nixpkgs.url = github:NixOS/nixpkgs/20.03;
 
   outputs = { self, nixpkgs }: 
     let

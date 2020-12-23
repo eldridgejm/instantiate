@@ -11,11 +11,11 @@
       {
         instantiate = forAllSystems (system:
           with import nixpkgs { system = "${system}"; };
-            python37Packages.buildPythonPackage rec {
+            python3Packages.buildPythonPackage rec {
               name = "instantiate";
               src = ./.;
-              propagatedBuildInputs = with python37Packages; [ jinja2 pyyaml ];
-              nativeBuildInputs = with python37Packages;[ black pytest ipython ];
+              propagatedBuildInputs = with python3Packages; [ jinja2 pyyaml ];
+              nativeBuildInputs = with python3Packages;[ black pytest ipython ];
             }
           );
 

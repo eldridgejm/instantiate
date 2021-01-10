@@ -1,7 +1,7 @@
 {
   description = "Instantiate directories from templates.";
 
-  inputs.nixpkgs.url = github:NixOS/nixpkgs/nixos-20.09;
+  inputs.nixpkgs.url = github:NixOS/nixpkgs/20.03;
 
   outputs = { self, nixpkgs }: 
     let
@@ -11,11 +11,11 @@
       {
         instantiate = forAllSystems (system:
           with import nixpkgs { system = "${system}"; };
-            python37Packages.buildPythonPackage rec {
+            python3Packages.buildPythonPackage rec {
               name = "instantiate";
               src = ./.;
-              propagatedBuildInputs = with python37Packages; [ jinja2 pyyaml ];
-              nativeBuildInputs = with python37Packages;[ black pytest ipython ];
+              propagatedBuildInputs = with python3Packages; [ jinja2 pyyaml ];
+              nativeBuildInputs = with python3Packages;[ black pytest ipython ];
             }
           );
 

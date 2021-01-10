@@ -64,8 +64,8 @@ def render(src, dst, variables):
     with dst.open("w") as fileobj:
         try:
             fileobj.write(template.render(**variables))
-        except jinja2.exceptions.UndefinedError as exc:
-            raise RuntimeError(f"Problem replacing in {src}: {exc}")
+        except Exception as exc:
+            raise RuntimeError(f"Problem rendering {src}: {exc}")
 
 
 def replace(directory, variables, no_replace=None, render=render):

@@ -60,7 +60,11 @@ def render(src, dst, variables):
     """Renders the template at src, writes result to dst."""
     with src.open("r") as fileobj:
         # raise on undefined variables
-        template = jinja2.Template(fileobj.read(), undefined=jinja2.StrictUndefined)
+        try:
+            template = jinja2.Template(fileobj.read(), undefined=jinja2.StrictUndefined)
+        except Exception as exc:
+            raise RuntimeError(f"Problem rendering {src}: {exc}")
+
     with dst.open("w") as fileobj:
         try:
             fileobj.write(template.render(**variables))
